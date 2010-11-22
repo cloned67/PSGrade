@@ -87,11 +87,11 @@ const uint8_t PROGMEM HUB_Device_Descriptor[] = { // why do we still need an HUB
         0x00,                      // bDeviceSubClass   
         0x01,                      // bDeviceProtocol  
         0x08,                      // packetSize    
-	0xAA, 0xAA, 0xCC, 0xCC,    // I'm a Psgroove child :)
+		0xAA, 0xAA, 0xCC, 0xCC,    // I'm a Psgroove child :)
         0x00, 0x01,                // bcdDevice      
         0x00, 
         0x00,
-	0x00, 
+		0x00, 
         0x01,                     
 };
 
@@ -136,11 +136,11 @@ const uint8_t PROGMEM port5_device_descriptor[] = {
         0x00,                   // bDeviceSubClass  
         0x00,                   // bDeviceProtocol
         0x08,                   // packetSize  
-	0x4c, 0x05, 0xeb, 0x02, // I'm a JIG :)
+		0x4c, 0x05, 0xeb, 0x02, // I'm a JIG :)
         0x00, 0x00,             // bcdDevice      
         0x00,                             
         0x00,            
-	0x00, 
+		0x00, 
         0x01,                   // num cfg
 };
 
@@ -152,7 +152,7 @@ const uint8_t PROGMEM port5_config_descriptor[] = {
         0x00, 
         0x00, 
         0x80,        // Attributes
-	0x01,        // 2mA
+		0x01,        // 2mA
 	// interface
 	0x09, 
         0x04,        // iFace
@@ -162,7 +162,7 @@ const uint8_t PROGMEM port5_config_descriptor[] = {
         0xff,        // bInterfaceClass (custom)
         0x00, 
         0x00,
-	0x00,
+		0x00,
 	// endpoint
 	0x07, 
         0x05,      // endP
