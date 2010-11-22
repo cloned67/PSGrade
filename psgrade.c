@@ -15,6 +15,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include <avr/power.h>
@@ -31,17 +33,18 @@
 #include "key.h"
 #include "hmac.h"
 
-#define RED	(LEDS_LED1)
+#define RED		(LEDS_LED1)
 #define GREEN	(LEDS_LED2)
 #define BOTH	(RED|GREEN)
 #define NONE	(LEDS_NO_LEDS)
 #define LED(x) LEDs_SetAllLEDs(x)
 
-#define PORT_EMPTY 0x0100   /* powered only */
-#define PORT_FULL 0x0103    /* connected, enabled, powered, full-speed */
-#define C_PORT_CONN  0x0001 /* connection */
-#define C_PORT_RESET 0x0010 /* reset */
-#define C_PORT_NONE  0x0000 /* no change */
+#define PORT_EMPTY 		0x0100   /* powered only */
+#define PORT_FULL 		0x0103    /* connected, enabled, powered, full-speed */
+#define C_PORT_CONN  	0x0001 /* connection */
+#define C_PORT_RESET 	0x0010 /* reset */
+#define C_PORT_NONE  	0x0000 /* no change */
+
 #define CHALLENGE_INDEX	7
 
 uint16_t port_status[6] = { PORT_EMPTY, PORT_EMPTY, PORT_EMPTY, PORT_EMPTY, PORT_EMPTY, PORT_EMPTY };
@@ -373,3 +376,4 @@ enum {
 	void EVENT_USB_Device_StartOfFrame		(void) { }
 	void EVENT_USB_UIDChange				(void) { }
 	void EVENT_USB_InitFailure				(const uint8_t ErrorCode) { }
+
