@@ -15,8 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include <avr/power.h>
@@ -40,67 +38,51 @@
 #define LED(x) LEDs_SetAllLEDs(x)
 
 #define PORT_EMPTY 		0x0100   /* powered only */
-#define PORT_FULL 		0x0103    /* connected, enabled, powered, full-speed */
-#define C_PORT_CONN  	0x0001 /* connection */
-#define C_PORT_RESET 	0x0010 /* reset */
-#define C_PORT_NONE  	0x0000 /* no change */
+#define PORT_FULL 		0x0103   /* connected, enabled, powered, full-speed */
+#define C_PORT_CONN  	0x0001   /* connection */
+#define C_PORT_RESET 	0x0010   /* reset */
+#define C_PORT_NONE  	0x0000   /* no change */
 
 #define CHALLENGE_INDEX	7
 
-uint16_t port_status[6] = { PORT_EMPTY, PORT_EMPTY, PORT_EMPTY, PORT_EMPTY, PORT_EMPTY, PORT_EMPTY };
-uint16_t port_change[6] = { C_PORT_NONE, C_PORT_NONE, C_PORT_NONE, C_PORT_NONE, C_PORT_NONE, C_PORT_NONE };
+//uint16_t port_status[6] = { PORT_EMPTY, PORT_EMPTY, PORT_EMPTY, PORT_EMPTY, PORT_EMPTY, PORT_EMPTY };
+//uint16_t port_change[6] = { C_PORT_NONE, C_PORT_NONE, C_PORT_NONE, C_PORT_NONE, C_PORT_NONE, C_PORT_NONE };
 
 enum { 
+    none, 
 	init,
-	wait_hub_ready,
-	hub_ready,
-	p5_wait_reset,
-	p5_wait_enumerate,
-	p5_challenged,
-	p5_responded,
-	p5_wait_disconnect,
-	p5_disconnected,
+	//wait_hub_ready,
+	//hub_ready,
+	start,
+	JIG_wait_reset,
+	JIG_wait_enumerate,
+	JIG_do_answer,
+	JIG_challenged,
+	JIG_responded,
+	JIG_wait_disconnect,
+	JIG_disconnected,
+	HID_wait_reset,
+	HID_wait_enumerate,
+	HID_connect,
 	done,
-} state = init;
+} state = none;
 
 
-		uint8_t 	hub_int_response 		= 0x00;
-		uint8_t 	hub_int_force_data0 	= 0;
-		int 		last_port_conn_clear 	= 0;
-		int 		last_port_reset_clear 	= 0;
+		//uint8_t 	hub_int_response 		= 0x00;
+		//uint8_t 	hub_int_force_data0 	= 0;
+		//int 		last_port_conn_clear 	= 0;
+		//int 		last_port_reset_clear 	= 0;
 	volatile 
 		uint8_t 	expire 					= 0; /* counts down every 10 milliseconds */
-		int8_t 		port_cur 				= -1;
-		int8_t 		port_addr[7] 			= { -1, -1, -1, -1, -1, -1, -1 };
+		//int8_t 		port_cur 				= -1;
+		//int8_t 		port_addr[7] 			= { -1, -1, -1, -1, -1, -1, -1 };
 
-	void 				USB_Device_SetDeviceAddress				(uint8_t Address) 		{
-	 port_addr[port_cur] = Address & 0x7f;
-	 UDADDR = Address & 0x7f;
-	 UDADDR |= (1 << ADDEN);
-	}
 
-	void 				switch_port								(int8_t port)			{
-	 if (port_cur == port) return;
-	 port_cur = port;
-	 if (port_addr[port] < 0) port_addr[port] = 0;
-	 UDADDR = port_addr[port] & 0x7f;
-	 UDADDR |= (1 << ADDEN);
-	}
 
-	ISR(TIMER1_OVF_vect) { 
-	 uint16_t rate = (uint16_t) -(F_CPU / 64 / 100);
-	 TCNT1H = rate >> 8;
-	 TCNT1L = rate & 0xff;
-	 if (expire > 0) expire--;
-	}
 
-	void 				panic									(int led1, int led2)	{
-	 for(;;) {
-		_delay_ms(100);		LED(led1);
-		_delay_ms(100);		LED(led2);
-	 }		
-	}
 
+
+/*
 	void 				HUB_Task								(void)					{
 	 Endpoint_SelectEndpoint(1);
  	 if (Endpoint_IsReadWriteAllowed())	{
@@ -115,6 +97,7 @@ enum {
 		}
 	 }
 	}
+*/
 
 	void 				JIG_Task								(void)					{
 	 static int bytes_out = 0, bytes_in = 0;
@@ -155,6 +138,14 @@ enum {
 	 }
 	}
 
+	void 				switch_port								(int8_t port)			{
+	 if (port_cur == port) return;
+	 port_cur = port;
+	 if (port_addr[port] < 0) port_addr[port] = 0;
+	 UDADDR = port_addr[port] & 0x7f;
+	 UDADDR |= (1 << ADDEN);
+	}
+
 	void 				connect_port							(int port)				{
 	 last_port_reset_clear = 0;
 	 hub_int_response = (1 << port);
@@ -170,57 +161,86 @@ enum {
 	}
 
 	void 				SetupHardware							(void)					{
-	 /* Disable watchdog if enabled by bootloader/fuses */
+	 // Disable watchdog if enabled by bootloader/fuses 
 	 MCUSR &= ~(1 << WDRF);
-	 wdt_disable();
- 	 /* Disable clock division */
-	 clock_prescale_set(clock_div_1);
- 	 /* Setup timer */
-	 TCCR1B = 0x03;  /* timer rate clk/64 */
+	 wdt_disable();                      
+ 	 
+	 clock_prescale_set(clock_div_1); 	// Disable clock division 
+	 TCCR1B = 0x03;  					// timer rate clk/64 
 	 TIMSK1 = 0x01;
- 	 /* Hardware Initialization */
+ 	 
 	 LEDs_Init();
 	 USB_Init();
-	 sei(); 
+	 
+	 sei(); //Enables interrupts by setting the global interrupt mask. 
 	}
 
 	int 				main									(void)					{
-	 SetupHardware();
-	 HMACInit(jig_key,20);
- 	 LED(~GREEN);
 	 state = init;
-	 switch_port(0);
+	 SetupHardware();
+ 	 LED(~GREEN);
+	 //HMACInit(jig_key,20);
+	 //switch_port(0);
+	 
  	 for (;;) {
-		if (port_cur == 0)	HUB_Task();
-		if (port_cur == 5)	JIG_Task();
-		USB_USBTask();
-			
-		if (state == hub_ready && expire == 0)	{
- 		 connect_port(5);
-		 state = p5_wait_reset;
-		}
+  	  USB_USBTask(); // why not in ISR ?
+	
+      if (expire ==0){    	
+ 	   switch (state) {
+		case start: 		
+		      connect_port(5); 
+			  state = p5_wait_reset;
+			  break;
+			  
+		case JIG_wait_reset:
+ 		      switch_port(5);
+		      state = p5_wait_enumerate;
+              break;
 
-		if (state == p5_wait_reset && last_port_reset_clear == 5) {
-		 switch_port(5);
-		 state = p5_wait_enumerate;
-		}
+		case JIG_do_answer: 
+		      JIG_Task(); 
+			  break;
 
-		if (state == p5_responded && expire == 0) {			
- 		 switch_port(0);
-		 disconnect_port(5);
-		 state = p5_wait_disconnect;
-		}
-		
-		if (state == p5_wait_disconnect && last_port_conn_clear == 5) {
-		 state = p5_disconnected;
-		 expire = 20;
-		}
-		
-		if (state == p5_disconnected && expire == 0) {
-		 LED(GREEN);
-		 break;
-		}
+ 	    case JIG_responded:
+ 		     disconnect_port(5);
+		     state = p5_wait_disconnect;
+			 break; 
+
+		case JIG_wait_disconnect:
+		     if (last_port_conn_clear == 5) {
+		      state = p5_disconnected;
+		      expire = 20;
+			 } 
+			 break;
+		case JIG_disconnected:	 
+     		 LED(GREEN);
+			 break;
+			 
+		default:
+		  break;
+	   } 
+	  }		
 	 }
+	}
+
+	void 				panic									(int led1, int led2)	{
+	 for(;;) {
+		_delay_ms(100);		LED(led1);
+		_delay_ms(100);		LED(led2);
+	 }		
+	}
+
+						ISR										(TIMER1_OVF_vect) 		{ 
+	 uint16_t rate = (uint16_t) -(F_CPU / 64 / 100);
+	 TCNT1H = rate >> 8;
+	 TCNT1L = rate & 0xff;
+	 if (expire > 0) expire--;
+	}
+
+	void 				USB_Device_SetDeviceAddress				(uint8_t Address) 		{
+	 port_addr[port_cur] = Address & 0x7f;
+	 UDADDR = Address & 0x7f;
+	 UDADDR |= (1 << ADDEN);
 	}
 
 	uint16_t 			CALLBACK_USB_GetDescriptor				(const uint16_t wValue,
@@ -361,15 +381,22 @@ enum {
 }
 
 	void 				EVENT_USB_Device_ConfigurationChanged	(void)					{ 
-	 /* careful with endpoints: we don't reconfigure when "switching ports" so we need the same configuration on all of them */
+	 /* careful with endpoints: we don't reconfigure when "switching ports" 
+	 so we need the same configuration on all of them */
 	 if (!Endpoint_ConfigureEndpoint(1, EP_TYPE_INTERRUPT, ENDPOINT_DIR_IN , 8, ENDPOINT_BANK_SINGLE))		panic(GREEN, BOTH);
 	 if (!Endpoint_ConfigureEndpoint(2, EP_TYPE_INTERRUPT, ENDPOINT_DIR_OUT, 8, ENDPOINT_BANK_SINGLE))		panic(GREEN, BOTH);
 	}
 
 
 	/// N.U.
-	void EVENT_USB_Device_Connect			(void) { }
-	void EVENT_USB_Device_Disconnect		(void) { }
+	void EVENT_USB_Device_Connect			(void) { 
+	
+	}
+	
+	void EVENT_USB_Device_Disconnect		(void) { 
+	
+	}
+	
 	void EVENT_USB_Device_Suspend			(void) { }
 	void EVENT_USB_Device_WakeUp			(void) { }
 	void EVENT_USB_Device_Reset				(void) { }
