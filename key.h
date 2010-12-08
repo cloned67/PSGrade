@@ -1,5 +1,5 @@
 /*
-PSGroove Exploit
+ JIG Cloned67
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,15 +15,15 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
- 
-const uint8_t PROGMEM hansi_chlng[] = { 
- 0x00, 
+
+const  uint8_t PROGMEM 	hansi_chlng				[] = {
+ 0x00,
  0x01, //--
- 0xFF, 
+ 0xFF,
  0xFF, //++
- 0x2E, 
- 0x02, 
- 0x01, //++ 
+ 0x2E,
+ 0x02,
+ 0x01, //++
 
  //challenge
  0x56,
@@ -31,8 +31,8 @@ const uint8_t PROGMEM hansi_chlng[] = {
  0xE1, 0x72, 0x3B, 0x6D,
  0xC0, 0x49, 0x42, 0x34,
  0x3B, 0x27, 0xC0, 0x3F,
- 0x13, 0x83, 0x4A, 
- 
+ 0x13, 0x83, 0x4A,
+
  0x00,
  0x00, 0x00, 0x00, 0x00,
 
@@ -46,22 +46,22 @@ const uint8_t PROGMEM hansi_chlng[] = {
  0x00, 0x00, 0x00, 0x00,
 };
 
-const uint8_t PROGMEM hansi_pass[] = { 
- 0x00, 
+const  uint8_t PROGMEM 	hansi_answer			[] = {
+ 0x00,
  0x00, //--
- 0xFF, 
+ 0xFF,
  0x00, //++
- 0x2E, 
- 0x02, 
+ 0x2E,
+ 0x02,
  0x02, //++
 
  0xAA, 0xAA, // jig ID
- 
+
  //chlng resp
        0x74, 0x1D, 0x18, 0xEB, 0x2D, 0x39, 0x7B,
- 0xF5, 0x22, 0x5C, 0x93, 0xB2, 0x1F, 0x72, 0xF7, 
- 0x1B, 0x45, 0x23, 0x72, 0x01, 
- 
+ 0xF5, 0x22, 0x5C, 0x93, 0xB2, 0x1F, 0x72, 0xF7,
+ 0x1B, 0x45, 0x23, 0x72, 0x01,
+
  0x00, 0x00, 0x00,
 
  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -71,112 +71,155 @@ const uint8_t PROGMEM hansi_pass[] = {
 
 };
 
-const uint8_t PROGMEM jig_key[20] = { 
- 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 
- 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 
- 0x11, 0x22, 0x33, 0x44
+const  uint8_t PROGMEM 	JIG_ID 					[] = {0xAA, 0xAA}; // PsGroove JIG_ID
+/*
+   Actualy that's neither the MasterKey nor is the DonglesKey ...
+   It should be instead, just something like:
+    HMACSHA1 ( PS3_DONGLE_KEY , FN(JIG_ID) ) for JIG_ID= 0xAAAA
+   Where FN(JIG_ID) may be just as simple as FN(JIG_ID) = JIG_ID
+*/
+const  uint8_t PROGMEM 	JIG_HMACSHA1_KEY		[] = {
+   0x04, 0x4E, 0x61, 0x1B, 0xA6, 0xA6, 0xE3, 0x9A
+ , 0x98, 0xCF, 0x35, 0x81, 0x2C, 0x80, 0x68, 0xC7
+ , 0xFC, 0x5F, 0x7A, 0xE8
 };
 
-const uint8_t PROGMEM jig_id [] = {0xaa, 0xaa}; // 
-
-static uint8_t jig_challenge_res[64];
-
-const uint8_t PROGMEM HUB_Device_Descriptor[] = { // why do we still need an HUB here ?
-	0x12, 
-        0x01, 
-        0x00, 0x02, 
-        0x09,                      // bDeviceClass 
-        0x00,                      // bDeviceSubClass   
-        0x01,                      // bDeviceProtocol  
-        0x08,                      // packetSize    
-		0xAA, 0xAA, 0xCC, 0xCC,    // I'm a Psgroove child :)
-        0x00, 0x01,                // bcdDevice      
-        0x00, 
-        0x00,
-		0x00, 
-        0x01,                     
-};
-
-const uint8_t PROGMEM HUB_Config_Descriptor[] = { // saa..
-	0x09, 
-        0x02,                    // Config
-        0x19, 0x00,              // wTotalLength 
-        0x01,                    // num iFace 
-        0x01,                    // bConfigurationValue
-        0x00, 
-        0xe0,	                 // Attributes
-        0x32,                    // 100mA
-	
-	0x09,  
-        0x04,                    // Interface
-        0x00, 
-        0x00, 
-        0x01, 
-        0x09, 
-        0x00, 
-        0x00,	
-        0x00,
-	
-	0x07, 
-        0x05,                   // Endpoint (interrupt in)
-        0x81, 
-        0x03, 
-        0x01, 
-        0x00, 
-        0x0c,
-};
-
-const uint8_t PROGMEM HUB_Hub_Descriptor[] = {
-	0x09, 0x29, 0x06, 0xa9, 0x00, 0x32, 0x64, 0x00,	0xff,
-};
-
-const uint8_t PROGMEM port5_device_descriptor[] = {
-	0x12, 
+const  uint8_t PROGMEM 	JIG_Device_desc			[] = {
+	0x12,
         0x01,                   // DEVICE
-        0x00, 0x02,             // bcdUSB 
+        0x00, 0x02,             // bcdUSB
         0x00,                   // bDeviceClass
-        0x00,                   // bDeviceSubClass  
+        0x00,                   // bDeviceSubClass
         0x00,                   // bDeviceProtocol
-        0x08,                   // packetSize  
+        0x08,                   // packetSize
 		0x4c, 0x05, 0xeb, 0x02, // I'm a JIG :)
-        0x00, 0x00,             // bcdDevice      
-        0x00,                             
-        0x00,            
-		0x00, 
+        0x00, 0x00,             // bcdDevice
+        0x00,
+        0x00,
+		0x00,
         0x01,                   // num cfg
 };
 
-const uint8_t PROGMEM port5_config_descriptor[] = {
-	0x09, 
+const  uint8_t PROGMEM 	JIG_Config_desc			[] = {
+	0x09,
         0x02,        // CFG
         0x20, 0x00,  // wTotalLength
         0x01,        // num iFace
-        0x00, 
-        0x00, 
+        0x00,
+        0x00,
         0x80,        // Attributes
 		0x01,        // 2mA
 	// interface
-	0x09, 
+	0x09,
         0x04,        // iFace
-        0x00, 
-        0x00, 
+        0x00,
+        0x00,
         0x02,        // num endP
         0xff,        // bInterfaceClass (custom)
-        0x00, 
+        0x00,
         0x00,
 		0x00,
 	// endpoint
-	0x07, 
+	0x07,
         0x05,      // endP
         0x02,      // bEndpointAddress (OUT)
         0x02,      // TransferType Bulk
         0x08,0x00, // PacketSize
         0x00,
 	// endpoint
-	0x07, 
+	0x07,
         0x05,       // endP
         0x81,       // bEndpointAddress  (IN)
         0x02,       // TransferType Bulk
         0x08, 0x00, // PacketSize
         0x00,
 };
+
+const  uint8_t PROGMEM 	HUB_Device_desc			[] = {
+	0x12,
+        0x01,
+        0x00, 0x02,
+        0x09,                      // bDeviceClass
+        0x00,                      // bDeviceSubClass
+        0x01,                      // bDeviceProtocol
+        0x08,                      // packetSize
+		0xAA, 0xAA, 0xCC, 0xCC,    // I'm a Psgroove child :)
+        0x00, 0x01,                // bcdDevice
+        0x00,
+        0x00,
+		0x00,
+        0x01,
+};
+
+const  uint8_t PROGMEM 	HUB_Config_desc			[] = {
+	0x09,
+        0x02,                    // Config
+        0x19, 0x00,              // wTotalLength
+        0x01,                    // num iFace
+        0x01,                    // bConfigurationValue
+        0x00,
+        0xe0,	                 // Attributes
+        0x32,                    // 100mA
+
+	0x09,
+        0x04,                    // Interface
+        0x00,
+        0x00,
+        0x01,
+        0x09,
+        0x00,
+        0x00,
+        0x00,
+
+	0x07,
+        0x05,                   // Endpoint (interrupt in)
+        0x81,
+        0x03,
+        0x01,
+        0x00,
+        0x0c,
+};
+
+const  uint8_t PROGMEM 	HUB_Hub_desc			[] = {
+	0x09, 0x29, 0x06, 0xa9, 0x00, 0x32, 0x64, 0x00,	0xff,
+};
+
+const  uint8_t PROGMEM 	DFU_Device_desc			[] = {
+	0x12,
+        0x01,                   // DEVICE
+        0x00, 0x02,             // bcdUSB
+        0xFF,                   // bDeviceClass     (VENDOR)
+        0x01,                   // bDeviceSubClass  (DFU)
+        0x00,                   // bDeviceProtocol
+        0x20,                   // packetSize
+		0xEB, 0x03, 0xFA, 0x2F, // I'm an AT90USB in DFU mode :)
+        0x00, 0x00,             // bcdDevice
+        0x01,
+        0x02,
+		0x03,
+        0x01,                   // num cfg
+};
+
+const  uint8_t PROGMEM 	DFU_Config_desc			[] = {
+	0x09,
+        0x02,        // CFG
+        0x12, 0x00,  // wTotalLength
+        0x01,        // num iFace
+        0x00,
+        0x00,
+        0x80,        // Attributes
+		0x33,        // 102mA
+	// interface
+	0x09,
+        0x00,        // iFace
+        0x00,
+        0x00,
+        0x00,        // num endP
+        0x00,        // bInterfaceClass (custom)
+        0x00,
+        0x00,
+		0x00,
+};
+
+static uint8_t JIG_Challenge_res				[64];
+
